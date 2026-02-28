@@ -10,9 +10,9 @@
 
 当前支持的筛选能力：
 
-- 严格人物筛选：必须检测到“站立的人”且“至少一张面部无遮挡的正脸”
-- 时长筛选：低于用户指定秒数的视频单独归类
-- 比例筛选：不符合用户指定宽高比的视频单独归类
+- 严格人物筛选：必须检测到站立的人，并且至少有一张可见的正脸
+- 时长筛选：低于用户指定秒数的视频会被单独归类
+- 比例筛选：不符合用户指定宽高比的视频会被单独归类
 - 重复视频筛选：按文件哈希精确识别重复内容
 
 ## 安装
@@ -23,18 +23,18 @@ python -m venv .venv
 pip install -r requirements.txt
 ```
 
-也可以直接运行 [run.bat](/d:/GitHub_list/AutoDetection/run.bat)，脚本会自动创建 `.venv` 并安装依赖。
+也可以直接运行 [run.bat](/d:/GitHub_list/AutoDetectionVideo/run.bat)，脚本会自动创建 `.venv` 并安装依赖。
 
 ## 一键运行
 
-编辑 [config.json](/d:/GitHub_list/AutoDetection/config.json)：
+编辑 [config.json](/d:/GitHub_list/AutoDetectionVideo/config.json)：
 
 - `root_folder`：要扫描的视频目录，输出目录也会创建在这里
 - `pretty`：是否格式化输出 JSON
 - `min_duration_seconds`：最小时长，留空则不按时长筛选
 - `target_width`：目标宽度，留空则不按比例筛选
 - `target_height`：目标高度，留空则不按比例筛选
-- `detect_duplicates`：是否开启重复视频检测，填 `true` 或 `false`
+- `detect_duplicates`：是否开启重复视频检测，填写 `true` 或 `false`
 
 然后运行：
 
@@ -59,26 +59,35 @@ pip install -r requirements.txt
 
 程序会在 `root_folder` 下创建这些目录：
 
-- `has_person`：满足“站立且面部无遮挡”
-- `no_person`：不满足严格人物条件
-- `short_video`：低于指定秒数
-- `ratio_mismatch`：不符合指定宽高比
+- `has_person`：满足严格人物规则（站立的人 + 可见脸）
+- `no_person`：不满足严格人物规则
+- `short_video`：低于配置的最小时长
+- `ratio_mismatch`：不符合配置的宽高比
 - `duplicate_video`：检测为重复内容
 
 说明：
 
-- 文件是“移动”不是“复制”
-- 如果文件名重复，会自动加编号后缀
+- 文件会被移动，不是复制
+- 如果目标文件名已存在，会自动追加数字后缀
 - 扫描时会自动跳过这些输出目录，避免重复处理
 
 ## 判定顺序
 
-程序按下面顺序处理：
+程序按以下顺序处理文件：
 
-1. 如果开启重复检测，先筛出重复视频
-2. 如果设置了最小时长，筛出低于阈值的视频
-3. 如果设置了目标宽高比，筛出比例不匹配的视频
-4. 剩余视频再做人物检测，分到 `has_person` 或 `no_person`
+1. 如果启用重复检测，先筛出重复视频
+2. 如果配置了最小时长，筛出低于阈值的视频
+3. 如果配置了目标宽高比，筛出比例不匹配的视频
+4. 对剩余视频执行人物检测，并移动到 `has_person` 或 `no_person`
+
+## 检测逻辑
+
+严格人物检测的判定流程如下：
+
+1. 先读取视频首帧
+2. 使用 OpenCV HOG 检测画面中的人体
+3. 使用 OpenCV Haar 级联检测人脸和眼睛
+4. 只有在“至少检测到一个站立的人”且“至少检测到一张可见脸”时，才判定为通过
 
 ## JSON 输出
 
@@ -113,7 +122,7 @@ pip install -r requirements.txt
 
 ## 注意事项
 
-- 只检测每个视频的第一帧
-- 当前使用 OpenCV HOG 和 Haar 级联，准确率有限
-- “面部无遮挡”是近似判断，不是专业遮挡识别模型
-- 重复视频检测是按文件内容哈希做精确去重，不是相似画面去重
+- 只分析每个视频的第一帧
+- 当前实现使用 OpenCV HOG 和 Haar 级联，准确率有限
+- “可见脸”是启发式判断，不是专门的遮挡识别模型
+- 重复视频检测是基于文件哈希的精确去重，不是基于画面相似度

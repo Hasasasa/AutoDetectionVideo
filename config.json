@@ -1,8 +1,8 @@
 {
-  "root_folder": "D:\\BaiduNetdiskDownload\\新建文件夹",
+  "root_folder": "D:\\BaiduNetdiskDownload\\视频检测测试数据",
   "pretty": true,
-  "min_duration_seconds": "",
-  "target_width": "",
-  "target_height": "",
+  "min_duration_seconds": "5",
+  "target_width": "720",
+  "target_height": "1280",
   "detect_duplicates": true
 }

@@ -80,6 +80,15 @@ The tool processes files in this order:
 3. If configured, filter videos that do not match the target aspect ratio
 4. Run person detection on the remaining videos and move them to `has_person` or `no_person`
 
+## Detection Logic
+
+The strict person detection rule works like this:
+
+1. Read only the first frame of the video
+2. Use OpenCV HOG to detect people in that frame
+3. Use OpenCV Haar cascades to detect faces and eyes
+4. Mark the video as passed only if at least one standing person and at least one visible face are detected
+
 ## JSON Output
 
 Summary fields include:
